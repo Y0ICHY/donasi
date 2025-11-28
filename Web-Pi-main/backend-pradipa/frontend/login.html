@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login Test</title>
+</head>
+<body style="background-image: url('bg.jpg'); background-size: contain; background-repeat: no-repeat; background-attachment: fixed; background-position: center;">
+  <button id="login-btn">Login</button>
+
+  <div id="donation-campaign" style="max-width: 600px; margin: 40px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+    <h2 style="text-align:center; color:#333; margin-bottom: 10px;">Bantu Kami Capai Target Donasi</h2>
+    <p style="text-align:center; color:#666; margin-bottom: 20px;">Setiap donasi Anda sangat berarti untuk membantu mereka yang membutuhkan.</p>
+  
+    <div style="background:#eee; border-radius: 20px; overflow: hidden; height: 25px; margin-bottom: 10px;">
+      <div id="progress-bar" style="height: 100%; width: 65%; background: #4caf50; transition: width 0.5s ease;"></div>
+    </div>
+  
+    <div style="display:flex; justify-content: space-between; font-weight: 600; color:#444; font-size: 14px;">
+      <span>Rp 6.500.000 terkumpul</span>
+      <span>Rp 10.000.000 target</span>
+    </div>
+  </div>
+
+  <div id="login-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:1000;">
+  <div style="background:#fff; padding:30px 25px; border-radius:10px; max-width:400px; width:90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: Arial, sans-serif; position: relative;">
+    <h2 id="modal-title" style="margin-top:0; margin-bottom:15px; font-weight:700; color:#333; text-align:center;">Masuk ke Donasi Kita</h2>
+    <p id="modal-subtitle" style="font-size:14px; color:#666; margin-bottom:20px; text-align:center;">
+      Silakan masukkan username dan password Anda untuk melanjutkan.
+    </p>
+
+    <!-- Login form -->
+    <div id="login-form">
+      <label for="login-username" style="display:block; font-weight:600; margin-bottom:5px; color:#444;">Username</label>
+      <input type="text" id="login-username" placeholder="Masukkan username" style="width:100%; padding:10px 12px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px; font-size:14px; box-sizing: border-box;" />
+      
+      <label for="login-password" style="display:block; font-weight:600; margin-bottom:5px; color:#444;">Password</label>
+      <input type="password" id="login-password" placeholder="Masukkan password" style="width:100%; padding:10px 12px; margin-bottom:20px; border:1px solid #ccc; border-radius:5px; font-size:14px; box-sizing: border-box;" />
+      
+      <button id="login-submit" style="width:100%; padding:12px; background:#4caf50; border:none; border-radius:6px; color:#fff; font-weight:700; font-size:16px; cursor:pointer; transition: background-color 0.3s ease;">
+        Masuk
+      </button>
+      <button id="show-register" style="width:100%; margin-top:10px; padding:12px; background:#2196f3; border:none; border-radius:6px; color:#fff; font-weight:700; font-size:16px; cursor:pointer; transition: background-color 0.3s ease;">
+        Daftar Pengguna Baru
+      </button>
+    </div>
+
+    <!-- Register form (hidden initially) -->
+    <div id="register-form" style="display:none;">
+      <label for="register-username" style="display:block; font-weight:600; margin-bottom:5px; color:#444;">Username</label>
+      <input type="text" id="register-username" placeholder="Masukkan username" style="width:100%; padding:10px 12px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px; font-size:14px; box-sizing: border-box;" />
+      
+      <label for="register-email-login" style="display:block; font-weight:600; margin-bottom:5px; color:#444;">Email</label>
+      <input type="email" id="register-email-login" placeholder="Masukkan email Anda" style="width:100%; padding:10px 12px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px; font-size:14px; box-sizing: border-box;" />
+
+      <label for="register-password" style="display:block; font-weight:600; margin-bottom:5px; color:#444;">Password</label>
+      <input type="password" id="register-password" placeholder="Masukkan password" style="width:100%; padding:10px 12px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px; font-size:14px; box-sizing: border-box;" />
+      
+      <label for="register-password-confirm" style="display:block; font-weight:600; margin-bottom:5px; color:#444;">Konfirmasi Password</label>
+      <input type="password" id="register-password-confirm" placeholder="Konfirmasi password" style="width:100%; padding:10px 12px; margin-bottom:20px; border:1px solid #ccc; border-radius:5px; font-size:14px; box-sizing: border-box;" />
+      
+      <button id="register-submit" style="width:100%; padding:12px; background:#4caf50; border:none; border-radius:6px; color:#fff; font-weight:700; font-size:16px; cursor:pointer; transition: background-color 0.3s ease;">
+        Daftar
+      </button>
+      <button id="show-login" style="width:100%; margin-top:10px; padding:12px; background:#f44336; border:none; border-radius:6px; color:#fff; font-weight:700; font-size:16px; cursor:pointer; transition: background-color 0.3s ease;">
+        Batal
+      </button>
+    </div>
+
+    <p id="login-error" style="color:#f44336; font-weight:600; margin-top:15px; display:none; text-align:center;"></div>
+  </div>
+</div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginModal = document.getElementById('login-modal');
+      const loginError = document.getElementById('login-error');
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const modalTitle = document.getElementById('modal-title');
+      const modalSubtitle = document.getElementById('modal-subtitle');
+
+      const loginBtn = document.getElementById('login-btn');
+      if(loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            loginModal.style.display = 'flex';
+            showLoginForm();
+        });
+      }
+
+      loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+          loginModal.style.display = 'none';
+        }
+      });
+
+      document.getElementById('show-register').addEventListener('click', () => {
+        showRegisterForm();
+      });
+
+      document.getElementById('show-login').addEventListener('click', () => {
+        showLoginForm();
+      });
+
+      document.getElementById('login-submit').addEventListener('click', async () => {
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+
+        if (!username || !password) {
+          return showError('Username dan password harus diisi.');
+        }
+
+        try {
+          const response = await fetch('/user/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.message || 'Login gagal');
+          }
+          alert('Login berhasil!');
+          loginModal.style.display = 'none';
+        } catch (error) {
+          showError(error.message);
+        }
+      });
+
+      document.getElementById('register-submit').addEventListener('click', async () => {
+        const username = document.getElementById('register-username').value.trim();
+        const password = document.getElementById('register-password').value.trim();
+        const passwordConfirm = document.getElementById('register-password-confirm').value.trim();
+
+        if (!username || !password || !passwordConfirm) {
+          return showError('Semua field harus diisi.');
+        }
+        if (password !== passwordConfirm) {
+          return showError('Password dan konfirmasi password tidak cocok.');
+        }
+
+        try {
+          const response = await fetch('/user/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            if (result.errors) {
+                const errorMsg = result.errors.map(e => e.msg).join(', ');
+                throw new Error(errorMsg);
+            }
+            throw new Error(result.message || 'Registrasi gagal');
+          }
+          alert('Registrasi berhasil! Silakan login.');
+          showLoginForm();
+        } catch (error) {
+          showError(error.message);
+        }
+      });
+
+      function showLoginForm() {
+        modalTitle.textContent = 'Masuk ke Donasi Kita';
+        modalSubtitle.textContent = 'Silakan masukkan username dan password Anda untuk melanjutkan.';
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        loginError.style.display = 'none';
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+      }
+
+      function showRegisterForm() {
+        modalTitle.textContent = 'Daftar Pengguna Baru';
+        modalSubtitle.textContent = 'Silakan isi form di bawah untuk membuat akun baru.';
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        loginError.style.display = 'none';
+        document.getElementById('register-username').value = '';
+        document.getElementById('register-password').value = '';
+        document.getElementById('register-password-confirm').value = '';
+      }
+
+      function showError(msg) {
+        loginError.textContent = msg;
+        loginError.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

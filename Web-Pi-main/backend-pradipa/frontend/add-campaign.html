@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Kampanye Baru - Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 2rem; }
+        .container { max-width: 600px; margin: auto; background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { display: inline-block; padding: 0.8rem 1.5rem; border: none; border-radius: 5px; background-color: #4caf50; color: white; cursor: pointer; text-align: center; text-decoration: none; }
+        .btn-container { text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tambah Kampanye Baru</h1>
+        <form id="add-campaign-form">
+            <div class="form-group">
+                <label for="title">Judul Kampanye</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Deskripsi</label>
+                <textarea id="description" name="description" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="target">Target Donasi (Rp)</label>
+                <input type="number" id="target" name="target" required>
+            </div>
+            <div class="form-group">
+                <label for="imageUrl">URL Gambar</label>
+                <input type="text" id="imageUrl" name="imageUrl" required>
+            </div>
+            <div class="form-group">
+                <label for="type">Tipe Kampanye</label>
+                <select id="type" name="type" required>
+                    <option value="donasi">Donasi</option>
+                    <option value="zakat">Zakat</option>
+                </select>
+            </div>
+            <div class="btn-container">
+                <button type="submit" class="btn">Simpan Kampanye</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('add-campaign-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Anda harus login sebagai admin.');
+                window.location.href = '/';
+                return;
+            }
+
+            const formData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                target: parseInt(document.getElementById('target').value),
+                imageUrl: document.getElementById('imageUrl').value,
+                type: document.getElementById('type').value
+            };
+
+            try {
+                const response = await fetch('/api/campaigns', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.message || 'Gagal menambahkan kampanye.');
+                }
+
+                alert('Kampanye baru berhasil ditambahkan!');
+                window.location.href = '/admin-dashboard'; // Kembali ke dasbor
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        });
+    </script>
+</body>
+</html>

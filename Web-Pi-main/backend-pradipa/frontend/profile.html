@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Pengguna - Donasi Kita</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+        }
+        .header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0 2rem;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+        .logo a {
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #333;
+        }
+        .nav-links a {
+            margin: 0 1rem;
+            text-decoration: none;
+            color: #555;
+        }
+        .auth-buttons button, .auth-buttons a {
+            text-decoration: none;
+            color: inherit;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: auto;
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .profile-header img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-right: 2rem;
+        }
+        .profile-info h2 {
+            margin: 0;
+        }
+        .donation-history {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav>
+            <div class="logo">
+                <a href="/">Donasi Kita</a>
+            </div>
+            <div class="nav-links">
+                <a href="/#campaigns">Donasi</a>
+                <a href="/#news">Berita</a>
+                <a href="/#contact">Kontak</a>
+            </div>
+            <div class="auth-buttons">
+                <div class="profile-container" style="display: block; cursor: pointer;">
+                    <a href="/profile" style="text-decoration: none; color: inherit;">Profil</a>
+                </div>
+                <button id="logout-btn" style="display: block;">Keluar</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="profile-header">
+            <img id="profile-pic" src="https://via.placeholder.com/150" alt="Foto Profil">
+            <div class="profile-info">
+                <h2 id="user-name">Nama Pengguna</h2>
+                <p id="user-email">Email Pengguna</p>
+                <button id="edit-profile-btn">Edit Profil</button>
+            </div>
+        </div>
+
+        <div class="donation-history">
+            <h3>Riwayat Donasi</h3>
+            <button id="show-history-btn">Tampilkan Riwayat</button>
+            <div id="donation-list" style="display: none;">
+                <!-- Riwayat donasi akan ditampilkan di sini -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/'; // Arahkan ke halaman utama jika tidak login
+                return;
+            }
+
+            const userNameEl = document.getElementById('user-name');
+            const userEmailEl = document.getElementById('user-email');
+            const profilePicEl = document.getElementById('profile-pic');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            async function loadUserProfile() {
+                try {
+                    // Gunakan URL relatif untuk mengambil data
+                    const response = await fetch('/user/profile', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        // Jika token tidak valid, hapus dan arahkan ke halaman utama
+                        if (response.status === 401 || response.status === 403) {
+                            localStorage.removeItem('token');
+                            window.location.href = '/';
+                        }
+                        throw new Error('Gagal memuat data profil.');
+                    }
+
+                    const user = await response.json();
+
+                    userNameEl.textContent = user.fullName || user.username;
+                    userEmailEl.textContent = user.email;
+                    
+                    // Gunakan path relatif untuk gambar jika ada
+                    if (user.profilePicture) {
+                        profilePicEl.src = user.profilePicture;
+                    } else {
+                        profilePicEl.src = 'https://via.placeholder.com/150';
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert(error.message);
+                }
+            }
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            });
+
+            await loadUserProfile();
+        });
+    </script>
+</body>
+</html>

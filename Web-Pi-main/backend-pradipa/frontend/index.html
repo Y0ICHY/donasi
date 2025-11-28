@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://via.placeholder.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Donasi Kita</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background-color: #fff;
+            padding: 10px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-weight: bold;
+            font-size: 24px;
+            color: #4caf50;
+            text-decoration: none;
+        }
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 20px;
+            max-width: 500px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+        }
+        nav .filter-buttons {
+            margin-right: 20px;
+        }
+        nav .filter-buttons button {
+            background-color: transparent;
+            border: 1px solid #4caf50;
+            color: #4caf50;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        nav .filter-buttons button.active, nav .filter-buttons button:hover {
+            background-color: #4caf50;
+            color: #fff;
+        }
+        #login-button, #logout-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        #logout-btn {
+            background-color: #f44336;
+        }
+        #user-profile a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        main {
+            padding: 20px 40px;
+        }
+        .campaigns-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .campaign-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+        .campaign-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .campaign-card-content {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .campaign-card h3 { margin: 0 0 10px; }
+        .campaign-card p {
+            color: #555;
+            font-size: 14px;
+            flex-grow: 1;
+        }
+        .campaign-card .detail-btn {
+            background-color: #2196f3;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            text-decoration: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #888;
+        }
+        .close-btn:hover { color: #000; }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            width: 0;
+            height: 15px;
+            background-color: #4caf50;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 15px;
+            color: white;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body style="background-image: url('bg.jpg'); background-size: contain; background-repeat: no-repeat; background-attachment: fixed; background-position: center;">
+
+    <header>
+        <a href="index.html" class="logo">Donasi Kita</a>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Cari kampanye...">
+        </div>
+        <nav>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-category="all">Semua</button>
+                <button class="filter-btn" data-category="donasi">Donasi</button>
+                <button class="filter-btn" data-category="zakat">Zakat</button>
+            </div>
+            <div id="user-profile" style="display: none;"></div>
+            <a id="admin-dashboard-link" href="admin.html" style="display: none; margin-left: 20px;">Dasbor Admin</a>
+            <button id="login-button">Masuk</button>
+            <button id="logout-btn" style="display: none;">Keluar</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="campaigns-container" id="campaigns-container">
+            <!-- Campaign cards will be injected here -->
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Login</h2>
+            <form id="login-form">
+                <div style="margin-bottom: 15px;">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" required style="width: 95%; padding: 8px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required style="width: 95%; padding: 8px;">
+                </div>
+                <button type="submit" style="width: 100%; padding: 10px; background-color: #4caf50; color: white; border: none; border-radius: 5px;">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- Element References ---
+            const loginModal = document.getElementById('login-modal');
+            const loginButton = document.getElementById('login-button');
+            const closeBtn = loginModal.querySelector('.close-btn');
+            const loginForm = document.getElementById('login-form');
+            const logoutBtn = document.getElementById('logout-btn');
+            const userProfile = document.getElementById('user-profile');
+            const adminDashboardLink = document.getElementById('admin-dashboard-link');
+            const campaignsContainer = document.getElementById('campaigns-container');
+            const searchInput = document.getElementById('search-input');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            let allCampaigns = [];
+
+            // --- User Authentication & UI ---
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            if (token && user) {
+                loginButton.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                userProfile.style.display = 'block';
+                userProfile.innerHTML = `<a href="profile.html">${user.username}</a>`; // Use username
+                if (user.role === 'admin') {
+                    adminDashboardLink.style.display = 'block';
+                }
+            } else {
+                loginButton.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                userProfile.style.display = 'none';
+                adminDashboardLink.style.display = 'none';
+            }
+
+            // --- Modal Logic ---
+            loginButton.onclick = () => loginModal.style.display = 'flex';
+            closeBtn.onclick = () => loginModal.style.display = 'none';
+            window.onclick = (event) => {
+                if (event.target == loginModal) {
+                    loginModal.style.display = 'none';
+                }
+            };
+            logoutBtn.onclick = () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.reload();
+            };
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value; // Changed from email
+                const password = document.getElementById('password').value;
+                try {
+                    // First, try to log in as a regular user
+                    let response = await fetch('/api/users/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password }),
+                    });
+
+                    let data = await response.json();
+
+                    // If user login fails, try admin login
+                    if (!response.ok) {
+                        const adminResponse = await fetch('/api/admin/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username, password }),
+                        });
+                        data = await adminResponse.json();
+                        if (!adminResponse.ok) throw new Error(data.message || 'Login gagal untuk pengguna dan admin');
+                    }
+
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    if (data.user.role === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.reload();
+                    }
+
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            // --- Campaign Logic ---
+            const renderCampaigns = (campaigns) => {
+                campaignsContainer.innerHTML = '';
+                if (!campaigns || campaigns.length === 0) {
+                    campaignsContainer.innerHTML = '<p>Tidak ada kampanye yang ditemukan.</p>';
+                    return;
+                }
+                campaigns.forEach(c => {
+                    const raised = c.raised || 0;
+                    const goal = c.goal || 0;
+                    const percentage = goal > 0 ? Math.min(Math.round((raised / goal) * 100), 100) : 0;
+                    const card = document.createElement('div');
+                    card.className = 'campaign-card';
+                    card.innerHTML = `
+                        <img src="${c.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${c.title}">
+                        <div class="campaign-card-content">
+                            <h3>${c.title}</h3>
+                            <p>${c.description ? c.description.substring(0, 100) : ''}...</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar">${percentage}%</div>
+                            </div>
+                            <p><strong>Terkumpul:</strong> Rp ${raised.toLocaleString('id-ID')}</p>
+                            <a href="campaign-detail.html?id=${c._id}" class="detail-btn">Lihat Detail</a>
+                        </div>`;
+                    card.querySelector('.progress-bar').style.width = `${percentage}%`;
+                    campaignsContainer.appendChild(card);
+                });
+            };
+
+            const filterAndRender = () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
+
+                let filtered = allCampaigns;
+
+                // The campaign model does not have a 'type' property for filtering.
+                // This part of the filtering is disabled for now.
+                /*
+                if (activeCategory !== 'all') {
+                    filtered = filtered.filter(c => c.type === activeCategory);
+                }
+                */
+
+                if (searchTerm) {
+                    filtered = filtered.filter(c => 
+                        c.title.toLowerCase().includes(searchTerm) ||
+                        (c.description && c.description.toLowerCase().includes(searchTerm))
+                    );
+                }
+                renderCampaigns(filtered);
+            };
+
+            searchInput.addEventListener('input', filterAndRender);
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelector('.filter-btn.active').classList.remove('active');
+                    button.classList.add('active');
+                    filterAndRender();
+                });
+            });
+
+            try {
+                const response = await fetch('/api/campaigns');
+                if (!response.ok) throw new Error('Gagal memuat kampanye');
+                allCampaigns = await response.json();
+                renderCampaigns(allCampaigns);
+            } catch (error) {
+                console.error(error);
+                campaignsContainer.innerHTML = '<p>Gagal memuat kampanye. Coba lagi nanti.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

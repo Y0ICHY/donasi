@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .progress {
+            height: 25px;
+            font-size: 1rem;
+        }
+        .update-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .update-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 id="campaign-title">Loading...</h1>
+        <div class="row">
+            <div class="col-md-8">
+                <img id="campaign-image" src="" class="img-fluid mb-3" alt="Campaign Image">
+                <h3>Deskripsi</h3>
+                <p id="campaign-description"></p>
+                <h3 class="mt-4">Update Kegiatan</h3>
+                <div id="updates-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Donasi</h5>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <p>
+                            Terkumpul: <strong id="raised-amount">Rp 0</strong>
+                        </p>
+                        <p>
+                            Target: <strong id="goal-amount">Rp 0</strong>
+                        </p>
+                        <p id="campaign-creator" class="text-muted"></p>
+
+                        <form id="donation-form">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Jumlah Donasi (Rp)</label>
+                                <input type="number" class="form-control" id="amount" placeholder="Masukkan jumlah" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Donasi Sekarang</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="admin-update-section" class="mt-4" style="display: none;">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Tambah Update (Admin)</h5>
+                            <form id="update-form">
+                                <div class="mb-3">
+                                    <label for="update-title" class="form-label">Judul</label>
+                                    <input type="text" class="form-control" id="update-title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="update-description" class="form-label">Deskripsi</label>
+                                    <textarea class="form-control" id="update-description" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-info w-100">Tambah Update</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const campaignId = urlParams.get('id');
+
+            function formatRupiah(amount) {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(amount);
+            }
+
+            function renderUpdates(updates) {
+                const updatesContainer = document.getElementById('updates-container');
+                updatesContainer.innerHTML = '';
+                if (updates && updates.length > 0) {
+                    updates.forEach(update => {
+                        const updateEl = document.createElement('div');
+                        updateEl.className = 'update-item';
+                        updateEl.innerHTML = `
+                            <h5>${update.title}</h5>
+                            <p>${update.description}</p>
+                            <p class="text-muted">${new Date(update.date).toLocaleDateString('id-ID')}</p>
+                        `;
+                        updatesContainer.appendChild(updateEl);
+                    });
+                } else {
+                    updatesContainer.innerHTML = '<p>Belum ada update untuk kampanye ini.</p>';
+                }
+            }
+
+            async function attachUpdateHandler(campaignId) {
+                const updateForm = document.getElementById('update-form');
+                if (updateForm) {
+                    updateForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const title = document.getElementById('update-title').value;
+                        const description = document.getElementById('update-description').value;
+                        const token = localStorage.getItem('token');
+
+                        try {
+                            const response = await fetch(`/api/campaigns/${campaignId}/updates`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ title, description })
+                            });
+
+                            if (!response.ok) {
+                                const err = await response.json();
+                                throw new Error(err.message || 'Gagal menambahkan update');
+                            }
+
+                            const updatedCampaign = await response.json();
+                            renderUpdates(updatedCampaign.updates);
+                            updateForm.reset();
+                        } catch (error) {
+                            console.error('Error adding update:', error);
+                            alert(`Error: ${error.message}`);
+                        }
+                    });
+                }
+            }
+
+            if (campaignId) {
+                try {
+                    const response = await fetch(`/api/campaigns/${campaignId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const campaign = await response.json();
+                    console.log('Campaign data received:', campaign);
+
+                    // Perbaikan: Mengakses nilai dari $numberInt jika ada, atau langsung
+                    const raisedAmount = campaign.collected?.$numberInt ? parseInt(campaign.collected.$numberInt) : (campaign.raised || 0);
+                    const goalAmount = campaign.target?.$numberInt ? parseInt(campaign.target.$numberInt) : (campaign.goal || 0);
+
+                    document.getElementById('campaign-title').textContent = campaign.title;
+                    document.getElementById('campaign-image').src = campaign.imageUrl;
+                    document.getElementById('campaign-description').textContent = campaign.description;
+                    
+                    document.getElementById('raised-amount').textContent = formatRupiah(raisedAmount);
+                    document.getElementById('goal-amount').textContent = formatRupiah(goalAmount);
+
+                    const percentage = goalAmount > 0 ? (raisedAmount / goalAmount) * 100 : 0;
+                    const progressBar = document.querySelector('.progress-bar');
+                    progressBar.style.width = `${percentage}%`;
+                    progressBar.setAttribute('aria-valuenow', percentage);
+
+                    if (campaign.createdBy && campaign.createdBy.name) {
+                        document.getElementById('campaign-creator').textContent = `Dibuat oleh: ${campaign.createdBy.name}`;
+                    }
+
+                    renderUpdates(campaign.updates);
+
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        document.getElementById('admin-update-section').style.display = 'block';
+                        attachUpdateHandler(campaignId);
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching campaign details:', error);
+                    document.getElementById('campaign-title').textContent = 'Campaign not found';
+                }
+            } else {
+                document.getElementById('campaign-title').textContent = 'No campaign ID provided';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Donasi Kita</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; }
+        .header { background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo a { text-decoration: none; font-weight: bold; font-size: 1.5rem; color: #333; }
+        #logout-btn { padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; background-color: #f44336; color: white; }
+        main { padding: 2rem; max-width: 1200px; margin: auto; }
+        h1 { color: #333; }
+        .campaign-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .campaign-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; }
+        .campaign-card img { width: 100%; height: 200px; object-fit: cover; }
+        .campaign-card-content { padding: 1rem; }
+        .campaign-card h3 { margin-top: 0; }
+        .campaign-actions { padding: 0 1rem 1rem; display: flex; gap: 0.5rem; }
+        .campaign-actions button { padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; }
+        .edit-btn { background-color: #ffc107; }
+        .delete-btn { background-color: #f44336; color: white; }
+        .add-btn { 
+            display: inline-block; 
+            margin-bottom: 1.5rem;
+            padding: 0.8rem 1.5rem; 
+            background-color: #4caf50; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 15px;
+            background-color: #4caf50;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 15px;
+            color: white;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <a href="/admin-dashboard">Admin Dashboard</a>
+        </div>
+        <button id="logout-btn">Keluar</button>
+    </header>
+
+    <main>
+        <h1>Manajemen Kampanye</h1>
+        <a href="/add-campaign" class="add-btn">Tambah Kampanye Baru</a>
+        <div id="campaign-list" class="campaign-list">
+            <!-- Daftar kampanye akan dimuat di sini -->
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('token');
+            // Jika tidak ada token, atau token bukan admin, kembali ke halaman utama
+            if (!token) { 
+                window.location.href = '/';
+                return;
+            }
+
+            const campaignListEl = document.getElementById('campaign-list');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            // Fungsi untuk mengambil dan menampilkan semua kampanye
+            async function loadCampaigns() {
+                try {
+                    const response = await fetch('/api/campaigns', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) throw new Error('Gagal mengambil data kampanye.');
+
+                    const campaigns = await response.json();
+                    campaignListEl.innerHTML = ''; // Kosongkan daftar sebelum mengisi
+
+                    campaigns.forEach(campaign => {
+                        const card = document.createElement('div');
+                        card.className = 'campaign-card';
+                        card.innerHTML = `
+                            <img src="${campaign.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${campaign.title}">
+                            <div class="campaign-card-content">
+                                <h3>${campaign.title}</h3>
+                                <p>Target: Rp ${parseInt(campaign.target).toLocaleString('id-ID')}</p>
+                            </div>
+                            <div class="campaign-actions">
+                                <button class="edit-btn" data-id="${campaign._id}">Edit</button>
+                                <button class="delete-btn" data-id="${campaign._id}">Hapus</button>
+                            </div>
+                        `;
+                        campaignListEl.appendChild(card);
+                    });
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert(error.message);
+                }
+            }
+            
+            // Event listener untuk tombol hapus dan edit
+            campaignListEl.addEventListener('click', async (e) => {
+                const campaignId = e.target.dataset.id;
+                if (!campaignId) return;
+
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Apakah Anda yakin ingin menghapus kampanye ini?')) {
+                        try {
+                            const response = await fetch(`/api/campaigns/${campaignId}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            if (!response.ok) throw new Error('Gagal menghapus kampanye.');
+                            
+                            // Muat ulang daftar kampanye setelah berhasil dihapus
+                            await loadCampaigns();
+
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert(error.message);
+                        }
+                    }
+                }
+
+                if (e.target.classList.contains('edit-btn')) {
+                    // Logika untuk edit akan ditambahkan di sini
+                    alert(`Fitur edit untuk kampanye ID: ${campaignId} akan segera diimplementasikan.`);
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            });
+
+            await loadCampaigns();
+        });
+    </script>
+</body>
+</html>
+
+
+    <main>
+        <div id="campaigns-list"></div>
+    </main>
+
+    <script>
+        const campaignsList = document.getElementById('campaigns-list');
+
+        const renderCampaigns = (campaigns) => {
+            campaignsList.innerHTML = ''; // Clear the list first
+            campaigns.forEach(campaign => {
+                const collected = campaign.collected || 0;
+                const target = campaign.target || 0;
+                const percentage = target > 0 ? Math.min(Math.round((collected / target) * 100), 100) : 0;
+                
+                const item = document.createElement('div');
+                item.className = 'campaign-item';
+                item.innerHTML = `
+                    <img src="${campaign.imageUrl}" alt="${campaign.title}">
+                    <div class="campaign-details">
+                        <h3>${campaign.title}</h3>
+                        <p>${campaign.description}</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar">${percentage}%</div>
+                        </div>
+                        <p><strong>Terkumpul:</strong> Rp ${collected.toLocaleString('id-ID')} / <strong>Target:</strong> Rp ${target.toLocaleString('id-ID')}</p>
+                    </div>
+                    <div class="campaign-actions">
+                        <button class="edit-btn" data-id="${campaign._id}">Edit</button>
+                        <button class="delete-btn" data-id="${campaign._id}">Hapus</button>
+                    </div>
+                `;
+                item.querySelector('.progress-bar').style.width = `${percentage}%`;
+                campaignsList.appendChild(item);
+            });
+        };
+
+        const loadCampaigns = async () => {
+            try {
+                const response = await fetch('/api/campaigns', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Gagal mengambil data kampanye.');
+
+                const campaigns = await response.json();
+                campaignListEl.innerHTML = ''; // Kosongkan daftar sebelum mengisi
+
+                campaigns.forEach(campaign => {
+                    const card = document.createElement('div');
+                    card.className = 'campaign-card';
+                    card.innerHTML = `
+                        <img src="${campaign.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${campaign.title}">
+                        <div class="campaign-card-content">
+                            <h3>${campaign.title}</h3>
+                            <p>Target: Rp ${parseInt(campaign.target).toLocaleString('id-ID')}</p>
+                        </div>
+                        <div class="campaign-actions">
+                            <button class="edit-btn" data-id="${campaign._id}">Edit</button>
+                            <button class="delete-btn" data-id="${campaign._id}">Hapus</button>
+                        </div>
+                    `;
+                    campaignListEl.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+    </script>
